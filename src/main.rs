@@ -18,6 +18,13 @@ lazy_static! {
 }
 
 
+#[get("/health")]
+fn health() -> Value {
+    // TODO: proper healthcheck.
+    return json!({"status": 200})
+}
+
+
 #[post("/", format = "application/json", data = "<data>")]
 async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &State<Client>) -> Result<Value, Status> {
     if (bauth.user != *BAUTH_USER) | (bauth.pass != *BAUTH_PASS) {
@@ -44,6 +51,6 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
 #[launch]
 fn rocket() -> _ {
     dotenv::dotenv().ok();
-    rocket::build().mount("/", routes![index]).manage(Client::new())
+    rocket::build().mount("/", routes![index, health]).manage(Client::new())
 }
 
