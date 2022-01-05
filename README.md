@@ -18,7 +18,7 @@ When the service is running, you can subscribe to configured ntfy.sh topic (in t
 
 Now, all that's left is to open grafana and test the notifications. Enter webhook url and path as follows, and don't forget to add basic auth credentials, and finally, press `Test`:
   
-![grafana_screenshot_1](./assets/grafana.png)
+![grafana_screenshot_1](./assets/grafana.jpg)
   
 You should instantly receive a notification:  
   
