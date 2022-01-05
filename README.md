@@ -13,11 +13,17 @@ BAUTH_PASS=test
 Then you would need to spin up the container, you can use existing Dockefile and docker-compose.yml or create your own. Just make sure that container is on the same network as grafana instance, so grafana will be able to send requests.  
   
 When the service is running, you can subscribe to configured ntfy.sh topic (in this example it's `test_b694d03045a7502f`) in your phone ntfy app to test it.  
+  
 ![phone_screenshot_1](./assets/subscribe.jpg)
 
 Now, all that's left is to open grafana and test the notifications. Enter webhook url and path as follows, and don't forget to add basic auth credentials, and finally, press `Test`:
+  
 ![grafana_screenshot_1](./assets/grafana.png)
   
-You should instantly receive a notification:
+You should instantly receive a notification:  
+  
 ![phone_screenshot_2](./assets/notification1.jpg)
+  
 ![phone_screenshot_3](./assets/notification2.jpg)
+  
+Now that you tested your notifications, you can press `Save` and configure all your system alerts.  
