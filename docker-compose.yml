@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+  api:
+    container_name: grafana-to-ntfy
+    image: grafana-to-ntfy
+    restart: always
+    build: .
+    env_file:
+      - .env
+    # For testing:
+    ports:
+      - 8080:8080
+
+networks:
+  default:
+    external:
+      name: caddynet
