@@ -9,6 +9,7 @@ COPY Cargo.lock .
 RUN apt-get update \
  && apt-get upgrade -y \
  && apt-get install -qq -y \
+    curl \
     musl-tools \
     libssl-dev \
     openssl \
@@ -24,5 +25,5 @@ ENTRYPOINT ["/usr/local/cargo/bin/grafana-to-ntfy"]
 
 # Additional layer for the healthcheck inside the container. This allows us to
 # display a container status in the 'docker ps' (or any other docker monitor).
-HEALTHCHECK --interval=1m --timeout=3s \
+HEALTHCHECK --interval=10s --timeout=3s \
   CMD curl -sf 0.0.0.0:8080/health || exit 1
