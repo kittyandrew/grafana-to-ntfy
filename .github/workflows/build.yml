@@ -28,6 +28,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: kittyandrew/grafana-to-ntfy
+          tags: |
+              type=ref,event=branch
+              type=sha,prefix={{branch}}-
+              type=raw,value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v2
