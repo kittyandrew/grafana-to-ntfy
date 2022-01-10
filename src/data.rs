@@ -19,7 +19,8 @@ pub struct Notification {
     pub dashboard_id: u64,
     #[serde(alias = "evalMatches")]
     pub eval_matches: Vec<Match>,
-    pub message: String,
+    // Note(andrew): 'message' field is not always present.
+    pub message: Option<String>,
     #[serde(alias = "orgId")]
     pub org_id: u64,
     #[serde(alias = "panelId")]

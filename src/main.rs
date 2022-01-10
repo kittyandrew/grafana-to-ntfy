@@ -45,7 +45,7 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
     };
 
     let result = client.post(NTFY_URL.clone())
-        .body(data.message.clone())
+        .body(data.message.clone().unwrap_or_default())
         .header("X-Tags", &tags_header)
         .header("X-Title", &data.title)
         .send()
