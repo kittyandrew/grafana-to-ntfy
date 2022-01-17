@@ -1,27 +1,24 @@
-# Proper multi-stage build failed. F.
-FROM rust:slim-buster
+FROM clux/muslrust as builder
 WORKDIR /usr/src/app
 # Copying config/build files.
 COPY src src
 COPY Cargo.toml .
 COPY Cargo.lock .
-# Install dependencies.
-RUN apt-get update \
- && apt-get upgrade -y \
- && apt-get install -qq -y \
-    curl \
-    musl-tools \
-    libssl-dev \
-    openssl \
-    pkg-config \
- && rustup target add x86_64-unknown-linux-musl
 # Building the program.
-# RUN cargo install --locked --target x86_64-unknown-linux-musl --path .
-RUN cargo install --locked --path .
+RUN rustup target add x86_64-unknown-linux-musl \
+ && cargo install --locked --target x86_64-unknown-linux-musl --path .
+
+
+FROM alpine:3.14 as main
+WORKDIR /usr/src/app
+RUN apk add --no-cache curl
+# Copying compiled executable from the 'builder'.
+COPY --from=builder /root/.cargo/bin/grafana-to-ntfy .
 # Copying rocket config file into final instance (startup/runtime config).
 COPY Rocket.toml .
 # Running binary.
-ENTRYPOINT ["/usr/local/cargo/bin/grafana-to-ntfy"]
+ENTRYPOINT ["./grafana-to-ntfy"]
+
 
 # Additional layer for the healthcheck inside the container. This allows us to
 # display a container status in the 'docker ps' (or any other docker monitor).
