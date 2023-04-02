@@ -2,9 +2,11 @@
 This service is a utility webhook server for the grafana alert webhooks, which sends a notification to your ntfy url ([ntfy.sh](https://ntfy.sh/)), and consequtively to your phone/desktop.  
 
 ### Usage
-First, clone the repository or open and copy `.env.sample` file. To configure it, enter your ntfy.sh's (or your own instance's) url and basic authorization credentials for requests from grafana. Here is an example:  
+First, clone the repository or open and copy `.env.sample` file. To configure it, enter your ntfy.sh's (or your own instance's) url, the ntfy basic auth credentials (if the instance has access control enabled) and basic authorization credentials for requests from grafana. Here is an example:  
 ```bash
 NTFY_URL=https://ntfy.sh/test_b694d03045a7502f
+NTFY_BAUTH_USER=grafana     # optional (required if the ntfy instance has access control enabled)
+NTFY_BAUTH_PASS=secret      # optional (required if the ntfy instance has access control enabled)
 BAUTH_USER=admin
 BAUTH_PASS=test
 ```
