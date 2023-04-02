@@ -13,6 +13,8 @@ mod data;
 
 lazy_static! {
     static ref NTFY_URL: String = var("NTFY_URL").unwrap();
+    static ref NTFY_BAUTH_USER: String = var("NTFY_BAUTH_USER").unwrap_or(String::new());
+    static ref NTFY_BAUTH_PASS: String = var("NTFY_BAUTH_PASS").unwrap_or(String::new());
     static ref BAUTH_USER: String = var("BAUTH_USER").unwrap_or(String::new());
     static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or(String::new());
 }
@@ -44,7 +46,13 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
         _ => data.state.to_string(),
     };
 
-    let result = client.post(NTFY_URL.clone())
+    let req_client = client.post(NTFY_URL.clone());
+    let req_client = match NTFY_BAUTH_USER.clone().is_empty() {
+        true => req_client,
+        false => req_client.basic_auth(NTFY_BAUTH_USER.clone(), Some(NTFY_BAUTH_PASS.clone())),
+    };
+
+    let result = req_client
         .body(data.message.clone().unwrap_or_default())
         .header("X-Tags", &tags_header)
         .header("X-Title", &data.title)
