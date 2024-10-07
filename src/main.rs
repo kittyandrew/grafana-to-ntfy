@@ -1,15 +1,16 @@
-#[macro_use] extern crate rocket;
-extern crate base64;
+#[macro_use]
+extern crate rocket;
 
-use rocket::{State, http::Status, serde::json::{json, Json, Value}};
+use dotenv;
 use lazy_static::lazy_static;
 use reqwest::Client;
+use rocket::http::Status;
+use rocket::serde::json::{json, Json, Value};
+use rocket::State;
 use std::env::var;
-use dotenv;
 
 mod bauth;
 mod data;
-
 
 lazy_static! {
     static ref NTFY_URL: String = var("NTFY_URL").unwrap();
@@ -19,18 +20,16 @@ lazy_static! {
     static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or(String::new());
 }
 
-
 #[get("/health")]
 fn health() -> Value {
     // TODO: proper healthcheck.
-    return json!({"status": 200})
+    return json!({"status": 200});
 }
-
 
 #[post("/", format = "application/json", data = "<data>")]
 async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &State<Client>) -> Result<Value, Status> {
     if (bauth.user != *BAUTH_USER) | (bauth.pass != *BAUTH_PASS) {
-        return Err(Status::Unauthorized)
+        return Err(Status::Unauthorized);
     }
 
     // Mapping grafana 'state' statuses^1 to the ntfy.sh emojis^23, so we have proper
@@ -56,20 +55,19 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
         .body(data.message.clone().unwrap_or_default())
         .header("X-Tags", &tags_header)
         .header("X-Title", &data.title)
+        .header("X-Priority", &data.get_priority())
         .send()
         .await;
 
     // TODO: logging
     match result {
         Ok(_) => return Ok(json!({"status": 200})),
-        Err(_) => return Err(Status::BadRequest)
+        Err(_) => return Err(Status::BadRequest),
     }
 }
-
 
 #[launch]
 fn rocket() -> _ {
     dotenv::dotenv().ok();
     rocket::build().mount("/", routes![index, health]).manage(Client::new())
 }
-
