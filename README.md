@@ -1,6 +1,9 @@
 # Grafana-to-ntfy
 This service is a utility webhook server for the grafana alert webhooks, which sends a notification to your ntfy url ([ntfy.sh](https://ntfy.sh/)), and consequtively to your phone/desktop.  
 
+**New:**
+- [ntfy priority support](#priority-support)
+
 ### Usage
 First, clone the repository or open and copy `.env.sample` file. To configure it, enter your ntfy.sh's (or your own instance's) url, the ntfy basic auth credentials (if the instance has access control enabled) and basic authorization credentials for requests from grafana. Here is an example:  
 ```bash
@@ -29,3 +32,8 @@ You should instantly receive a notification:
 ![phone_screenshot_3](./assets/notification2.jpg)
   
 Now that you tested your notifications, you can press `Save` and configure all your system alerts.  
+
+### Priority support
+
+To use [ntfy prioritization](https://docs.ntfy.sh/publish/#message-priority), you need to asign label `priority` to your alert.  
+Value of label can be either priority `ID` or `Name` from the doc above, so, for max priority - `max`, `priority` or `5`.  
