@@ -1,5 +1,5 @@
 # Grafana-to-ntfy
-This service is a utility webhook server for the grafana alert webhooks, which sends a notification to your ntfy url ([ntfy.sh](https://ntfy.sh/)), and consequtively to your phone/desktop.  
+This service is a utility webhook server for the grafana alert webhooks, which sends a notification to your ntfy url ([ntfy.sh](https://ntfy.sh/)), and consequently to your phone/desktop.  
 
 **New:**
 - [ntfy priority support](#priority-support)
@@ -13,7 +13,7 @@ NTFY_BAUTH_PASS=secret      # optional (required if the ntfy instance has access
 BAUTH_USER=admin
 BAUTH_PASS=test
 ```
-**Note:** ntfy.sh urls are publicly available, so better add some random string in the end to make it safe (or make the url path completely random).  
+**Note:** ntfy.sh urls are publicly available, so, if you are not using NTFY BAUTH, better add some random string in the end to make it safer (or make the url path completely random).  
   
 Then you would need to spin up the container, you can use existing Dockefile and docker-compose.yml or create your own. Just make sure that container is on the same network as grafana instance, so grafana will be able to send requests.  
   
