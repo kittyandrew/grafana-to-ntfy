@@ -4,7 +4,10 @@ WORKDIR /usr/src/app
 COPY src src
 COPY Cargo.toml .
 COPY Cargo.lock .
+
 # Building the program.
+RUN apt-get update \
+ && apt-get install pkgconf openssl libssl-dev
 RUN rustup target add x86_64-unknown-linux-musl \
  && cargo install --locked --target x86_64-unknown-linux-musl --path .
 
