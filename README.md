@@ -36,4 +36,4 @@ Now that you tested your notifications, you can press `Save` and configure all y
 ### Priority support
 
 To use [ntfy prioritization](https://docs.ntfy.sh/publish/#message-priority), you need to asign label `priority` to your alert.  
-Value of label can be either priority `ID` or `Name` from the doc above, so, for max priority - `max`, `priority` or `5`.  
+Value of label can be either priority `ID` or `Name` from the doc above, so, for max priority - `max`, `urgent` or `5`.  
