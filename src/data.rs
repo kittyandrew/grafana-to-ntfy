@@ -7,7 +7,7 @@ pub struct Notification {
     pub message: Option<String>,
     pub state: String,
     pub title: String,
-    #[serde(rename = "commonLabels")]
+    #[serde(alias = "tags", alias = "commonLabels")]
     pub labels: Option<Labels>,
 }
 

@@ -47,6 +47,7 @@
             clippy
             rustc
             openssl
+            bore-cli
           ];
         };
       };
