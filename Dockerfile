@@ -1,4 +1,4 @@
-FROM clux/muslrust as builder
+FROM clux/muslrust:stable AS builder
 WORKDIR /usr/src/app
 # Copying config/build files.
 COPY src src
@@ -9,7 +9,7 @@ RUN rustup target add x86_64-unknown-linux-musl \
  && cargo install --locked --target x86_64-unknown-linux-musl --path .
 
 
-FROM alpine:3.14 as main
+FROM alpine:3.14 AS main
 WORKDIR /usr/src/app
 RUN apk add --no-cache curl
 # Copying compiled executable from the 'builder'.
