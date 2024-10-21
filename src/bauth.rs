@@ -26,13 +26,13 @@ impl<'r> FromRequest<'r> for BAuth {
                             user: u.to_string(),
                             pass: p.to_string(),
                         }),
-                        None => Outcome::Failure((Status::BadRequest, BAuthError::Invalid)),
+                        None => Outcome::Error((Status::BadRequest, BAuthError::Invalid)),
                     },
-                    Err(_) => Outcome::Failure((Status::BadRequest, BAuthError::Invalid)),
+                    Err(_) => Outcome::Error((Status::BadRequest, BAuthError::Invalid)),
                 },
-                None => Outcome::Failure((Status::BadRequest, BAuthError::Invalid)),
+                None => Outcome::Error((Status::BadRequest, BAuthError::Invalid)),
             },
-            None => Outcome::Failure((Status::BadRequest, BAuthError::Missing)),
+            None => Outcome::Error((Status::BadRequest, BAuthError::Missing)),
         }
     }
 }
