@@ -46,7 +46,7 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
     };
 
     let req_client = client.post(NTFY_URL.clone());
-    let req_client = match NTFY_BAUTH_USER.clone().is_empty() {
+    let req_client = match NTFY_BAUTH_PASS.clone().is_empty() {
         true => req_client,
         false => req_client.basic_auth(NTFY_BAUTH_USER.clone(), Some(NTFY_BAUTH_PASS.clone())),
     };
