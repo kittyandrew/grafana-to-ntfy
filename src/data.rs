@@ -5,7 +5,7 @@ use rocket::serde::Deserialize;
 pub struct Notification {
     // Note(andrew): 'message' field is not always present.
     pub message: Option<String>,
-    pub state: String,
+    pub status: String,
     pub title: String,
     #[serde(alias = "tags", alias = "commonLabels")]
     pub labels: Option<Labels>,
