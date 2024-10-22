@@ -6,9 +6,16 @@ pub struct Notification {
     // Note(andrew): 'message' field is not always present.
     pub message: Option<String>,
     pub status: String,
+    // NOTE(weriomat): prometheus alertmanager does not supply a title, therefore we set an arbitrary title of 'alertmanager'
+    #[serde(default = "title")]
     pub title: String,
     #[serde(alias = "tags", alias = "commonLabels")]
     pub labels: Option<Labels>,
+}
+
+/// Default implementation of the Title, used for alertmanager
+fn title() -> String {
+    "Alertmanager".to_owned()
 }
 
 #[derive(Deserialize, Debug)]
