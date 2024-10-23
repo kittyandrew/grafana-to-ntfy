@@ -5,6 +5,7 @@ use rocket::serde::Deserialize;
 pub struct Notification {
     // Note(andrew): 'message' field is not always present.
     pub message: Option<String>,
+    #[serde(alias = "state")]
     pub status: String,
     // NOTE(weriomat): prometheus alertmanager does not supply a title, therefore we set an arbitrary title of 'alertmanager'
     #[serde(default = "title")]
