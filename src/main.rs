@@ -32,17 +32,16 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
         return Err(Status::Unauthorized);
     }
 
-    // Mapping grafana 'state' statuses^1 to the ntfy.sh emojis^23, so we have proper
-    // warning emoji on the alertings state and so on..  @Incomplete
-    //   ^1 - https://grafana.com/docs/grafana/latest/alerting/old-alerting/notifications/#webhook
+    // Mapping grafana 'status'^1 to the ntfy.sh emojis^23, so we have proper
+    // warning emoji on the alertings state and so on..
+    //   ^1 - https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/webhook-notifier/
     //   ^2 - https://ntfy.sh/docs/publish/#tags-emojis
     //   ^3 - https://ntfy.sh/docs/emojis
     //
-    let tags_header = match data.state.as_str() {
-        "alerting" => format!("{}, {}", "warning", &data.state),
-        "ok" => format!("{}, {}", "white_check_mark", &data.state),
-        // TODO: There are more 'state' values to map.
-        _ => data.state.to_string(),
+    let tags_header = match data.status.as_str() {
+        "firing" => format!("{}, {}", "warning", &data.status),
+        "resolved" => format!("{}, {}", "white_check_mark", &data.status),
+        _ => data.status.to_string(),
     };
 
     let req_client = client.post(NTFY_URL.clone());
