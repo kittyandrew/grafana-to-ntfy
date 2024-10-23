@@ -63,7 +63,10 @@ async fn index(
                 {
                     Ok(_) => {}
                     // TODO: better log, maybe other error return
-                    Err(_) => return Err(Status::BadRequest),
+                    Err(_) => {
+                        println!("Bad Request: {:?}", data);
+                        return Err(Status::BadRequest);
+                    }
                 };
             }
             Ok(json!({"status":200}))
@@ -71,7 +74,7 @@ async fn index(
         None => {
             // TODO: legacy handeling
             // TODO: log this
-            println!("NO ALERTS PRESENT, falling back");
+            println!("NO ALERTS PRESENT: {:?}", data);
             Err(Status::InternalServerError)
         }
     }

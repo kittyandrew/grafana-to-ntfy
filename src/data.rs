@@ -1,6 +1,5 @@
 use core::fmt;
-use reqwest::Client;
-use rocket::{serde::Deserialize, State};
+use rocket::serde::Deserialize;
 use std::{collections::HashMap, str::FromStr};
 
 // TODO: common stuff
