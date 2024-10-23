@@ -5,6 +5,7 @@ This service is a utility webhook server for the grafana alert webhooks as well 
 **New:**
 
 - [ntfy priority support](#priority-support)
+- [prometheus alertmanager support](#alertmanager)
 
 ## Usage
 
