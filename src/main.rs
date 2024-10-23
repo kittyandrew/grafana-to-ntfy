@@ -27,47 +27,60 @@ fn health() -> Value {
 }
 
 #[post("/", format = "application/json", data = "<data>")]
-async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &State<Client>) -> Result<Value, Status> {
+async fn index(
+    data: Json<data::Notification>,
+    bauth: bauth::BAuth,
+    client: &State<Client>,
+) -> Result<Value, Status> {
+    // TODO: logger
     if (bauth.user != *BAUTH_USER) | (bauth.pass != *BAUTH_PASS) {
         return Err(Status::Unauthorized);
     }
 
-    // Mapping grafana 'status'^1 (or 'state'^2) to the ntfy.sh emojis^34, so we have proper
-    // warning emoji on the alertings state and so on..
-    //   ^1 - https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/webhook-notifier/
-    //   ^2 - https://grafana.com/docs/grafana/latest/alerting/old-alerting/notifications/#webhook
-    //   ^3 - https://ntfy.sh/docs/publish/#tags-emojis
-    //   ^4 - https://ntfy.sh/docs/emojis
-    //
-    let tags_header = match data.status.as_str() {
-        "alerting" | "firing" => format!("{}, {}", "warning", &data.status),
-        "ok" | "resolved" => format!("{}, {}", "white_check_mark", &data.status),
-        _ => data.status.to_string(),
-    };
+    // TODO: decide if we discard everything beside the alerts
 
-    let req_client = client.post(NTFY_URL.clone());
-    let req_client = match NTFY_BAUTH_PASS.clone().is_empty() {
-        true => req_client,
-        false => req_client.basic_auth(NTFY_BAUTH_USER.clone(), Some(NTFY_BAUTH_PASS.clone())),
-    };
+    // NOTE(weriomat): we send a message per alert not per "webhook sent"
+    // TODO:
+    // NOTE(weriomat): this behaviour is consistent between alertmanager and grafana
+    match &data.alerts {
+        Some(al) => {
+            for i in al {
+                let req_client = client.post(NTFY_URL.clone());
+                let req_client = match NTFY_BAUTH_PASS.clone().is_empty() {
+                    true => req_client,
+                    false => req_client
+                        .basic_auth(NTFY_BAUTH_USER.clone(), Some(NTFY_BAUTH_PASS.clone())),
+                };
 
-    let result = req_client
-        .body(data.message.clone().unwrap_or_default())
-        .header("X-Tags", &tags_header)
-        .header("X-Title", &data.title)
-        .header("X-Priority", &data.get_priority())
-        .send()
-        .await;
-
-    // TODO: logging
-    match result {
-        Ok(_) => return Ok(json!({"status": 200})),
-        Err(_) => return Err(Status::BadRequest),
+                match req_client
+                    .body(i.get_body())
+                    .header("X-Tags", i.get_tags())
+                    .header("X-Title", i.get_name())
+                    .header("X-Priority", i.get_priority())
+                    .header("X-Actions", i.get_action_header())
+                    .send()
+                    .await
+                {
+                    Ok(_) => {}
+                    // TODO: better log, maybe other error return
+                    Err(_) => return Err(Status::BadRequest),
+                };
+            }
+            Ok(json!({"status":200}))
+        }
+        None => {
+            // TODO: legacy handeling
+            // TODO: log this
+            println!("NO ALERTS PRESENT, falling back");
+            Err(Status::InternalServerError)
+        }
     }
 }
 
 #[launch]
 fn rocket() -> _ {
     dotenv::dotenv().ok();
-    rocket::build().mount("/", routes![index, health]).manage(Client::new())
+    rocket::build()
+        .mount("/", routes![index, health])
+        .manage(Client::new())
 }
