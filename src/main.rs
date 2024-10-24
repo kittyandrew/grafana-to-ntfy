@@ -18,6 +18,8 @@ lazy_static! {
     static ref NTFY_BAUTH_PASS: String = var("NTFY_BAUTH_PASS").unwrap_or(String::new());
     static ref BAUTH_USER: String = var("BAUTH_USER").unwrap_or(String::new());
     static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or(String::new());
+    // NOTE(weriomat): Feature Flag for ['X-Action' Header](https://docs.ntfy.sh/publish/#action-buttons)
+    static ref NTFY_ACTION_BUTTONS: String = var("NTFY_ACTION_BUTTONS").unwrap_or(String::from("true"));
 }
 
 #[get("/health")]
@@ -52,12 +54,20 @@ async fn index(
                         .basic_auth(NTFY_BAUTH_USER.clone(), Some(NTFY_BAUTH_PASS.clone())),
                 };
 
+                let actions = match NTFY_ACTION_BUTTONS.trim().parse() {
+                    Ok(b) => match b {
+                        true => i.get_action_header(),
+                        false => "".to_string(),
+                    },
+                    Err(_) => "".to_string(),
+                };
+
                 match req_client
                     .body(i.get_body())
                     .header("X-Tags", i.get_tags())
                     .header("X-Title", i.get_name())
                     .header("X-Priority", i.get_priority())
-                    .header("X-Actions", i.get_action_header())
+                    .header("X-Actions", actions)
                     .send()
                     .await
                 {
