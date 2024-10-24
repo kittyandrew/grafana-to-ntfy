@@ -6,6 +6,10 @@ This service is a utility webhook server for the grafana alert webhooks as well 
 
 - [ntfy priority support](#priority-support)
 - [prometheus alertmanager support](#alertmanager)
+- [ntfy actions support](#actions-support)
+- [better ntfy tag support](#better-tag-support)
+- [better annotations support](#better-annotations-support)
+- [better alert support](#better-alert-support)
 
 ## Usage
 
@@ -87,5 +91,32 @@ After a while you should recive a notification similar to this:
 
 ## Priority support
 
-To use [ntfy prioritization](https://docs.ntfy.sh/publish/#message-priority), you need to asign label `priority` to your alert.  
+To use [ntfy prioritization](https://docs.ntfy.sh/publish/#message-priority), you need to assign label `priority` to your alert.  
 Value of label can be either priority `ID` or `Name` from the doc above, so, for max priority - `max`, `urgent` or `5`.  
+In order to integrate better with [Awesome Prometheus alerts](https://samber.github.io/awesome-prometheus-alerts) we accept the
+`severity` label as well. Currently, the `info` value is mapped to `low`, `warning` to `high`, `critical` to `max` 
+and every other value falls back to `default`.
+
+## Actions support
+
+This feature is enabled by default and can be disabled by setting the env var `NTFY_ACTION_BUTTONS` to `false`.
+When enabled the `X-Actions` header in the message to [ntfy](https://docs.ntfy.sh/publish/#action-buttons) will be set.
+In the case of Alertmanager it will be set to the value of the `generatorURL` key.
+While when using this application with Grafana we will look for the `silenceURL` key as well. 
+In both cases if the annotation key `runbook_url` is set the value will be appended to the header as well. 
+
+## Better Tag support
+
+The labels of each message will be mapped to `key:value` as a [ntfy-tag](https://docs.ntfy.sh/publish/#tags-emojis).
+
+## Better Annotations support
+
+The body of each message will consist mapped key-value pairs. The key `summary` and `description` if present will be mentioned first.
+Note that the `runbook_url` will be filtered out since it will be set as an action if enabled.
+
+## Better Alert support
+
+In the old version there was one ntfy message sent for each incoming request. 
+Since Grafana as well as Alertmanager bundle multiple alerts into one notification 
+we sent one ntfy message for each alert included in a request.
+
