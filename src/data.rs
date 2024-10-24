@@ -7,15 +7,6 @@ use std::{collections::HashMap, str::FromStr};
 #[derive(Deserialize, Debug)]
 #[serde(crate = "rocket::serde")]
 pub struct Notification {
-    // // Note(andrew): 'message' field is not always present.
-    // pub message: Option<String>,
-    // pub status: String,
-    // // NOTE(weriomat): prometheus alertmanager does not supply a title, therefore we set an arbitrary title of 'alertmanager'
-    // #[serde(default = "title")]
-    // pub title: String,
-    // // TODO: make this a hashmap as well
-    // #[serde(alias = "tags", alias = "commonLabels")]
-    // pub labels: Option<Labels>,
     pub alerts: Option<Vec<Alerts>>,
 }
 
