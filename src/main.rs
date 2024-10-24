@@ -34,15 +34,11 @@ async fn index(
     bauth: bauth::BAuth,
     client: &State<Client>,
 ) -> Result<Value, Status> {
-    // TODO: logger
     if (bauth.user != *BAUTH_USER) | (bauth.pass != *BAUTH_PASS) {
         return Err(Status::Unauthorized);
     }
 
-    // TODO: decide if we discard everything beside the alerts
-
     // NOTE(weriomat): we send a message per alert not per "webhook sent"
-    // TODO:
     // NOTE(weriomat): this behaviour is consistent between alertmanager and grafana
     match &data.alerts {
         Some(al) => {
@@ -72,9 +68,8 @@ async fn index(
                     .await
                 {
                     Ok(_) => {}
-                    // TODO: better log, maybe other error return
                     Err(_) => {
-                        println!("Bad Request: {:?}", data);
+                        warn!("Could not send an ntfy alert");
                         return Err(Status::BadRequest);
                     }
                 };
@@ -82,9 +77,7 @@ async fn index(
             Ok(json!({"status":200}))
         }
         None => {
-            // TODO: legacy handeling
-            // TODO: log this
-            println!("NO ALERTS PRESENT: {:?}", data);
+            warn!("Could not deserialze alerts");
             Err(Status::InternalServerError)
         }
     }

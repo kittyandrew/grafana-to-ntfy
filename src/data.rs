@@ -2,7 +2,6 @@ use core::fmt;
 use rocket::serde::Deserialize;
 use std::{collections::HashMap, str::FromStr};
 
-// TODO: common stuff
 // NOTE(weriomat): Alertmanager (v. 0.27) - Headers ignored: version, groupKey, truncatedAlerts, status, receiver, groupLabels, commonLabels, commonAnnotations, externalURL
 // NOTE(weriomat): Grafana (v. 10.4) - Headers ignored: receiver, status, orgId, alerts, groupLabels, commonLabels, commonAnnotation, externalURL, version, groupKey, truncatedAlerts, (title, state, message) will be deprecated soon
 #[derive(Deserialize, Debug)]
@@ -20,25 +19,22 @@ pub struct Notification {
     pub alerts: Option<Vec<Alerts>>,
 }
 
-// NOTE(weriomat): For now I focussed on Alertmanager
 // NOTE(weriomat): Alertmanager (v. 0.27) - Alerts ignored: startsAt, endsAt, fingerprint
 // NOTE(weriomat): Grafana (v. 10.4) - Alerts ignored: startsAt, endsAt, values, fingerprint, (dashboardURL, panelURL) will be deprecated soon, imageURL
 #[derive(Deserialize, Debug)]
 #[serde(crate = "rocket::serde")]
 pub struct Alerts {
     pub status: Status,
-
-    // TODO: validate this
-    // TODO: find out a way to handle key values in ntfy
     // NOTE(weriomat): Since we can have arbirary key-value pairs we need to use a Hashmap
-    pub labels: Option<HashMap<String, String>>, // TODO: handle priority
+    pub labels: Option<HashMap<String, String>>,
     pub annotations: Option<HashMap<String, String>>,
     #[serde(rename = "generatorURL")]
     // NOTE(weriomat): The generatorURL 'header' is present in both Grafana and Alertmanager
     // (Grafana) URL of the alert rule in the Grafana UI, (Alertmanager) identifies the entity that caused the alert
     pub generatorurl: String,
     #[serde(rename = "silenceURL")]
-    pub silenceurl: Option<String>, // NOTE(weriomat): this value is only presend in grafana
+    // NOTE(weriomat): this value is only presend in grafana
+    pub silenceurl: Option<String>,
 }
 
 impl Alerts {
@@ -65,19 +61,18 @@ impl Alerts {
         };
 
         match &self.annotations {
+            // NOTE(weriomat): Grafana lets you attach a runbook directly to the alert
             Some(annotations) => match annotations.get("runbook_url") {
                 Some(runbook) => format!("{}; action=view, Runbook, {}", actions, runbook),
                 None => actions,
             },
             None => actions,
         }
-        // NOTE(weriomat): Grafana lets you attach a runbook directly to the alert
     }
 
     // NOTE(weriomat): Alertmanager: These seem to be common labels, at least they are all set in a collection of [alert rules](https://samber.github.io/awesome-prometheus-alerts/rules.html)
     // NOTE(weriomat): Grafana: The UI lets you set both of those headers
     pub fn get_body(&self) -> String {
-        // TODO: append values in case of grafana
         match &self.annotations {
             Some(annotations) => {
                 let mut body = match annotations.get("summary") {
@@ -97,7 +92,6 @@ impl Alerts {
                     }
                     body = format!("{}\n{}: {}", body, key, val);
                 }
-
                 body
             }
             None => "".to_string(),
@@ -125,9 +119,8 @@ impl Alerts {
                 None => match labels.get("severity") {
                     Some(severity) => match Severity::from_str(&severity) {
                         Ok(s) => s.to_string(),
-                        // TODO: log this properly
                         Err(_) => {
-                            println!("Severity label <{}> could not be matched into <info|warning|critical>", severity);
+                            warn!("Severity label <{}> could not be matched into <info|warning|critical>", severity);
                             "default".to_string()
                         }
                     },
@@ -177,7 +170,6 @@ pub enum Status {
     resolved,
 }
 
-// NOTE(weriomat): This could arguably a bad way to implement string formatting, but it is convienient for now
 // Mapping grafana 'status'^1 to the ntfy.sh emojis^23, so we have proper
 // warning emoji on the alertings state and so on..
 //   ^1 - https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/webhook-notifier/
