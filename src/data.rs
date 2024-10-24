@@ -108,7 +108,7 @@ impl Alerts {
             Some(labels) => match labels.get("priority") {
                 Some(priority) => priority.to_string(),
                 None => match labels.get("severity") {
-                    Some(severity) => match Severity::from_str(&severity) {
+                    Some(severity) => match Severity::from_str(severity) {
                         Ok(s) => s.to_string(),
                         Err(_) => {
                             warn!("Severity label <{}> could not be matched into <info|warning|critical>", severity);
@@ -125,17 +125,17 @@ impl Alerts {
 
 // NOTE(weriomat): [samber](https://samber.github.io/awesome-prometheus-alerts) uses the severity label instead of priority, appently there only the following severities
 pub enum Severity {
-    info,
-    warning,
-    critical,
+    Info,
+    Warning,
+    Critical,
 }
 
 impl fmt::Display for Severity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Severity::info => write!(f, "low"),
-            Severity::warning => write!(f, "high"),
-            Severity::critical => write!(f, "max"),
+            Severity::Info => write!(f, "low"),
+            Severity::Warning => write!(f, "high"),
+            Severity::Critical => write!(f, "max"),
         }
     }
 }
@@ -145,9 +145,9 @@ impl FromStr for Severity {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "info" => Ok(Severity::info),
-            "warning" => Ok(Self::warning),
-            "critical" => Ok(Self::critical),
+            "info" => Ok(Severity::Info),
+            "warning" => Ok(Self::Warning),
+            "critical" => Ok(Self::Critical),
             _ => Err(()),
         }
     }
@@ -157,8 +157,10 @@ impl FromStr for Severity {
 #[derive(Deserialize, Debug)]
 #[serde(crate = "rocket::serde")]
 pub enum Status {
-    firing,
-    resolved,
+    #[serde(rename = "firing")]
+    Firing,
+    #[serde(rename = "resolved")]
+    Resolved,
 }
 
 // Mapping grafana 'status'^1 to the ntfy.sh emojis^23, so we have proper
@@ -170,8 +172,8 @@ pub enum Status {
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Status::firing => write!(f, "warning"),
-            Status::resolved => write!(f, "white_check_mark"),
+            Status::Firing => write!(f, "warning"),
+            Status::Resolved => write!(f, "white_check_mark"),
         }
     }
 }

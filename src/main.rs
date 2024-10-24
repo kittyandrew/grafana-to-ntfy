@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-use dotenv;
 use lazy_static::lazy_static;
 use reqwest::Client;
 use rocket::http::Status;
@@ -14,10 +13,10 @@ mod data;
 
 lazy_static! {
     static ref NTFY_URL: String = var("NTFY_URL").unwrap();
-    static ref NTFY_BAUTH_USER: String = var("NTFY_BAUTH_USER").unwrap_or(String::new());
-    static ref NTFY_BAUTH_PASS: String = var("NTFY_BAUTH_PASS").unwrap_or(String::new());
-    static ref BAUTH_USER: String = var("BAUTH_USER").unwrap_or(String::new());
-    static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or(String::new());
+    static ref NTFY_BAUTH_USER: String = var("NTFY_BAUTH_USER").unwrap_or_default();
+    static ref NTFY_BAUTH_PASS: String = var("NTFY_BAUTH_PASS").unwrap_or_default();
+    static ref BAUTH_USER: String = var("BAUTH_USER").unwrap_or_default();
+    static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or_default();
     // NOTE(weriomat): Feature Flag for ['X-Action' Header](https://docs.ntfy.sh/publish/#action-buttons)
     static ref NTFY_ACTION_BUTTONS: String = var("NTFY_ACTION_BUTTONS").unwrap_or(String::from("true"));
 }
@@ -25,7 +24,7 @@ lazy_static! {
 #[get("/health")]
 fn health() -> Value {
     // TODO: proper healthcheck.
-    return json!({"status": 200});
+    json!({"status": 200})
 }
 
 #[post("/", format = "application/json", data = "<data>")]
