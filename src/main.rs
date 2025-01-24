@@ -67,6 +67,6 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
 
 #[launch]
 fn rocket() -> _ {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     rocket::build().mount("/", routes![index, health]).manage(Client::new())
 }

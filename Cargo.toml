@@ -10,5 +10,5 @@ rust-version = "1.75.0"
 rocket = { version = "0.5.0-rc.1", features = ["json"] }
 lazy_static = "1.4.0"
 reqwest = "0.11.8"
-dotenv = "0.15.0"
+dotenvy = "0.15.0"
 base64 = "0.13.0"
