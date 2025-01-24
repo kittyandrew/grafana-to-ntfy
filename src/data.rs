@@ -29,7 +29,10 @@ struct StatusOptions<'a> {
 fn deserialize_status<'d, D: Deserializer<'d>>(d: D) -> Result<String, D::Error> {
     let StatusOptions { state, status } = StatusOptions::deserialize(d)?;
     // 'Unknown' should never happen unless everything broke.
-    Ok(state.or(status).map(Into::into).unwrap_or("unknown".to_string()))
+    Ok(state
+        .or(status)
+        .map(Into::into)
+        .unwrap_or("unknown".to_string()))
 }
 
 #[derive(Deserialize, Debug)]

@@ -26,7 +26,11 @@ fn health() -> Value {
 }
 
 #[post("/", format = "application/json", data = "<data>")]
-async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &State<Client>) -> Result<Value, Status> {
+async fn index(
+    data: Json<data::Notification>,
+    bauth: bauth::BAuth,
+    client: &State<Client>,
+) -> Result<Value, Status> {
     if (bauth.user != *BAUTH_USER) | (bauth.pass != *BAUTH_PASS) {
         return Err(Status::Unauthorized);
     }
@@ -68,5 +72,7 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
 #[launch]
 fn rocket() -> _ {
     dotenvy::dotenv().ok();
-    rocket::build().mount("/", routes![index, health]).manage(Client::new())
+    rocket::build()
+        .mount("/", routes![index, health])
+        .manage(Client::new())
 }
