@@ -89,3 +89,10 @@ After a while you should recive a notification similar to this:
 
 To use [ntfy prioritization](https://docs.ntfy.sh/publish/#message-priority), you need to asign label `priority` to your alert.  
 Value of label can be either priority `ID` or `Name` from the doc above, so, for max priority - `max`, `urgent` or `5`.  
+
+## Testing
+Run all tests:
+```
+# from inside of 'nix develop' shell:
+nix flake check -L
+```
