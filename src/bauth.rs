@@ -1,3 +1,4 @@
+use base64::Engine;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
 
@@ -20,8 +21,8 @@ impl<'r> FromRequest<'r> for BAuth {
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         match req.headers().get_one("Authorization") {
             Some(data) => match data.strip_prefix("Basic ") {
-                Some(raw) => match base64::decode(raw) {
-                    Ok(v) => match String::from_utf8(v).unwrap_or(String::new()).split_once(":") {
+                Some(raw) => match base64::engine::general_purpose::STANDARD.decode(raw) {
+                    Ok(v) => match String::from_utf8(v).unwrap_or_default().split_once(":") {
                         Some((u, p)) => Outcome::Success(BAuth {
                             user: u.to_string(),
                             pass: p.to_string(),

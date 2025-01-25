@@ -1,27 +1,30 @@
-FROM clux/muslrust:stable AS builder
+# Do a cross compile to save time (rather than running in Qemu)
+FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/cargo-zigbuild:0.19.7 AS builder
+ARG architecture=x86_64-unknown-linux-musl
 WORKDIR /usr/src/app
 # Copying config/build files.
 COPY src src
 COPY Cargo.toml .
 COPY Cargo.lock .
 
+# Get the build tools
+RUN rustup target add ${architecture}
+
 # Building the program.
-RUN apt-get update \
- && apt-get install pkgconf openssl libssl-dev
-RUN rustup target add x86_64-unknown-linux-musl \
- && cargo install --locked --target x86_64-unknown-linux-musl --path .
+RUN cargo zigbuild --locked --release --target ${architecture}
 
-
-FROM alpine:3.14 AS main
+# Create the final image (this must be done with qemu emulation if cross-compiling).
+ARG TARGETPLATFORM
+FROM --platform=$TARGETPLATFORM docker.io/alpine:3.21.2 AS main
+ARG architecture=x86_64-unknown-linux-musl
 WORKDIR /usr/src/app
 RUN apk add --no-cache curl
 # Copying compiled executable from the 'builder'.
-COPY --from=builder /root/.cargo/bin/grafana-to-ntfy .
+COPY --from=builder /usr/src/app/target/${architecture}/release/grafana-to-ntfy .
 # Copying rocket config file into final instance (startup/runtime config).
 COPY Rocket.toml .
 # Running binary.
 ENTRYPOINT ["./grafana-to-ntfy"]
-
 
 # Additional layer for the healthcheck inside the container. This allows us to
 # display a container status in the 'docker ps' (or any other docker monitor).

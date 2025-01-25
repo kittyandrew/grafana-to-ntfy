@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate rocket;
 
-use dotenv;
 use lazy_static::lazy_static;
 use reqwest::Client;
 use rocket::http::Status;
@@ -14,20 +13,24 @@ mod data;
 
 lazy_static! {
     static ref NTFY_URL: String = var("NTFY_URL").unwrap();
-    static ref NTFY_BAUTH_USER: String = var("NTFY_BAUTH_USER").unwrap_or(String::new());
-    static ref NTFY_BAUTH_PASS: String = var("NTFY_BAUTH_PASS").unwrap_or(String::new());
-    static ref BAUTH_USER: String = var("BAUTH_USER").unwrap_or(String::new());
-    static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or(String::new());
+    static ref NTFY_BAUTH_USER: String = var("NTFY_BAUTH_USER").unwrap_or_default();
+    static ref NTFY_BAUTH_PASS: String = var("NTFY_BAUTH_PASS").unwrap_or_default();
+    static ref BAUTH_USER: String = var("BAUTH_USER").unwrap_or_default();
+    static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or_default();
 }
 
 #[get("/health")]
 fn health() -> Value {
     // TODO: proper healthcheck.
-    return json!({"status": 200});
+    json!({"status": 200})
 }
 
 #[post("/", format = "application/json", data = "<data>")]
-async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &State<Client>) -> Result<Value, Status> {
+async fn index(
+    data: Json<data::Notification>,
+    bauth: bauth::BAuth,
+    client: &State<Client>,
+) -> Result<Value, Status> {
     if (bauth.user != *BAUTH_USER) | (bauth.pass != *BAUTH_PASS) {
         return Err(Status::Unauthorized);
     }
@@ -61,13 +64,15 @@ async fn index(data: Json<data::Notification>, bauth: bauth::BAuth, client: &Sta
 
     // TODO: logging
     match result {
-        Ok(_) => return Ok(json!({"status": 200})),
-        Err(_) => return Err(Status::BadRequest),
+        Ok(_) => Ok(json!({"status": 200})),
+        Err(_) => Err(Status::BadRequest),
     }
 }
 
 #[launch]
 fn rocket() -> _ {
-    dotenv::dotenv().ok();
-    rocket::build().mount("/", routes![index, health]).manage(Client::new())
+    dotenvy::dotenv().ok();
+    rocket::build()
+        .mount("/", routes![index, health])
+        .manage(Client::new())
 }
