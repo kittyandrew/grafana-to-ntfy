@@ -34,14 +34,4 @@ jobs:
             TAG="--tag ${DOCKER_IMAGE}:${REFS[2]}"
           fi
 
-          for platform in linux/amd64 linux/arm64; do
-             case $platform in
-                linux/amd64)
-                  architecture=x86_64-unknown-linux-musl
-                  ;;
-                linux/arm64)
-                  architecture=aarch64-unknown-linux-musl
-                  ;;
-             esac
-             docker buildx build --build-arg architecture=${architecture} --push ${TAG} --platform ${platform} .
-          done
+          docker buildx build --push ${TAG} --platform linux/amd64,linux/arm64 .
