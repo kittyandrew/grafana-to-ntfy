@@ -17,6 +17,7 @@ NTFY_BAUTH_USER=grafana     # optional (required if the ntfy instance has access
 NTFY_BAUTH_PASS=secret      # optional (required if the ntfy instance has access control enabled)
 BAUTH_USER=admin
 BAUTH_PASS=test
+MARKDOWN=true               # optional (enable Markdown formatting)
 ```
 
 **Note:** ntfy.sh urls are publicly available, so, if you are not using NTFY BAUTH, better add some random string in the end to make it safer (or make the url path completely random).  

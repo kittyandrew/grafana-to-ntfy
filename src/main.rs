@@ -17,6 +17,7 @@ lazy_static! {
     static ref NTFY_BAUTH_PASS: String = var("NTFY_BAUTH_PASS").unwrap_or_default();
     static ref BAUTH_USER: String = var("BAUTH_USER").unwrap_or_default();
     static ref BAUTH_PASS: String = var("BAUTH_PASS").unwrap_or_default();
+    static ref MARKDOWN: String = var("MARKDOWN").unwrap_or_default();
 }
 
 #[get("/health")]
@@ -59,6 +60,7 @@ async fn index(
         .header("X-Tags", &tags_header)
         .header("X-Title", &data.title)
         .header("X-Priority", &data.get_priority())
+        .header("X-Markdown", MARKDOWN.as_str())
         .send()
         .await;
 
