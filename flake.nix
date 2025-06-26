@@ -42,7 +42,18 @@
         pkgs,
         system,
         ...
-      }: {
+      }: let
+        grafana-to-ntfy = let
+          craneLib =
+            (crane.mkLib pkgs).overrideToolchain
+            inputs.fenix.packages.${system}.minimal.toolchain;
+        in
+          craneLib.buildPackage {
+            src = ./.;
+            nativeBuildInputs = [pkgs.pkg-config];
+            buildInputs = [pkgs.openssl];
+          };
+      in {
         formatter = pkgs.alejandra;
 
         devShells.default = let
@@ -62,24 +73,21 @@
                 openssl
                 bore-cli
                 pythonCustom
+                act # for testing gh workflows locally
               ];
             };
+
+        packages = {
+          inherit grafana-to-ntfy;
+          default = grafana-to-ntfy;
+        };
 
         checks = let
           checkArgs = versioned-pkgs: {
             inherit pkgs;
             inherit system;
             inherit versioned-pkgs;
-            grafana-to-ntfy = let
-              craneLib =
-                (crane.mkLib pkgs).overrideToolchain
-                inputs.fenix.packages.${system}.minimal.toolchain;
-            in
-              craneLib.buildPackage {
-                src = ./.;
-                nativeBuildInputs = [pkgs.pkg-config];
-                buildInputs = [pkgs.openssl];
-              };
+            inherit grafana-to-ntfy;
           };
         in {
           grafana-base-test-unstable = import ./tests/grafana-base-test.nix (checkArgs nixpkgs);

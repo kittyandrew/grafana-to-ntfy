@@ -1,0 +1,21 @@
+name: nix flake checks
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # 26.06.2025
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31 # 26.06.2025
+        with:
+          enable_kvm: true
+
+      - name: Run flake checks
+        run: nix flake check --print-build-logs --show-trace
