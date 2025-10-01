@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # 26.06.2025
+        uses: actions/checkout@v5 # 26.06.2025
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31 # 26.06.2025
