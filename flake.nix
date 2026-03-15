@@ -90,6 +90,7 @@
               RUST_LOG = "info";
               buildInputs = [
                 inputs.fenix.packages.${system}.complete.toolchain
+                alejandra
                 bore-cli
                 deadnix
                 pythonCustom
