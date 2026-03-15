@@ -1,5 +1,5 @@
 (import ./lib/lib.nix) {
-  name = "prometheus-minimal-test";
+  name = "prometheus-base-test";
 
   nodes = {
     primary = import ./lib/prometheus-machine.nix;
@@ -14,6 +14,7 @@
     primary.wait_for_open_port(${c.gtn-port})
     primary.wait_for_unit("alertmanager")
     primary.wait_for_open_port(${c.alertmanager-port})
+    primary.wait_for_unit("prometheus")
     primary.succeed("prometheus --version | head -n1 > /tmp/metadata.txt")
     primary.succeed("ntfy-tester-py")
   '';

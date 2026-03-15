@@ -1,37 +1,70 @@
 name: build and push to dockerhub
 
-on: push
+on:
+  workflow_run:
+    workflows: ["nix flake checks", "lint"]
+    types: [completed]
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
+      # @NOTE: workflow_run fires once per triggering workflow. This step ensures we only
+      #  proceed when BOTH lint and flake-checks have succeeded for the same commit.
+      #  If one finishes before the other, this step fails and the build re-triggers
+      #  when the second workflow completes.
+      - name: Verify all required checks passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          for WORKFLOW in "lint.yml" "flake-checks.yml"; do
+            CONCLUSION=$(gh api "repos/${{ github.repository }}/actions/workflows/$WORKFLOW/runs?head_sha=$SHA&per_page=1" --jq '.workflow_runs[0].conclusion')
+            if [ "$CONCLUSION" != "success" ]; then
+              echo "Workflow $WORKFLOW has not succeeded (status: $CONCLUSION), skipping build"
+              exit 1
+            fi
+          done
+
       - name: checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6 # 15.03.2026
+        with:
+          # @NOTE: workflow_run events use the default branch HEAD, not the triggering commit.
+          #  Explicitly check out the commit that passed the checks.
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31 # 15.03.2026
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v8 # 15.03.2026
+
+      - name: Extract version
+        id: version
+        run: echo "version=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        run: nix build .#docker
+
+      - name: Load image
+        run: docker load < result
 
       - name: login to docker hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3 # 15.03.2026
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: install buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: build and push the image
+      - name: Tag and push
         run: |
-          REPO=($(echo ${GITHUB_REPOSITORY} | tr '/' ' '))
-          DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/${REPO[1]}"
-
-          REFS=($(echo ${GITHUB_REF} | tr '/' ' '))
-          if [[ ${REFS[2]} == master ]]; then
-            TAG="--tag ${DOCKER_IMAGE}:latest"
-          else
-            TAG="--tag ${DOCKER_IMAGE}:${REFS[2]}"
-          fi
-
-          docker buildx build --push ${TAG} --platform linux/amd64,linux/arm64 .
+          VERSION="${{ steps.version.outputs.version }}"
+          SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+          DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/grafana-to-ntfy"
+          docker tag grafana-to-ntfy:${VERSION} ${DOCKER_IMAGE}:latest
+          docker tag grafana-to-ntfy:${VERSION} ${DOCKER_IMAGE}:${VERSION}
+          docker tag grafana-to-ntfy:${VERSION} ${DOCKER_IMAGE}:sha-${SHORT_SHA}
+          docker push ${DOCKER_IMAGE}:latest
+          docker push ${DOCKER_IMAGE}:${VERSION}
+          docker push ${DOCKER_IMAGE}:sha-${SHORT_SHA}

@@ -7,12 +7,13 @@ test:
   system,
   versioned-pkgs,
   grafana-to-ntfy,
+  docker-image ? null,
 }: let
   ntfy-tester = pkgs.stdenv.mkDerivation {
     name = "ntfy-tester-py";
     buildInputs = [
       (pkgs.python3.withPackages
-        (pythonPackages: with pythonPackages; [websocket-client requests]))
+        (pythonPackages: with pythonPackages; [websocket-client]))
     ];
     unpackPhase = "true";
     installPhase = ''
@@ -28,6 +29,7 @@ in
       inherit ntfy-tester;
       inherit versioned-pkgs;
       inherit grafana-to-ntfy;
+      inherit docker-image;
     };
     # This makes `self` available in the NixOS configuration of our virtual machines.
     # This is useful for referencing modules or packages from your own flake

@@ -1,0 +1,31 @@
+name: lint
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6 # 15.03.2026
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31 # 15.03.2026
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v8 # 15.03.2026
+
+      - name: cargo fmt
+        run: nix develop -c cargo fmt --check
+
+      - name: cargo clippy
+        run: nix develop -c cargo clippy -- -D warnings
+
+      - name: alejandra
+        run: nix develop -c alejandra --check .
+
+      - name: deadnix
+        run: nix develop -c deadnix --fail --no-lambda-pattern-names .

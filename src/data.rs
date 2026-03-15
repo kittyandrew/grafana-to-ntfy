@@ -28,11 +28,10 @@ struct StatusOptions<'a> {
 
 fn deserialize_status<'d, D: Deserializer<'d>>(d: D) -> Result<String, D::Error> {
     let StatusOptions { state, status } = StatusOptions::deserialize(d)?;
-    // 'Unknown' should never happen unless everything broke.
-    Ok(state
-        .or(status)
-        .map(Into::into)
-        .unwrap_or("unknown".to_string()))
+    // @NOTE: Prefer 'status' (current Grafana unified alerting / Alertmanager field) over
+    //  'state' (deprecated legacy Grafana alerting field). If both are present, the current
+    //  field wins. 'Unknown' should never happen unless everything broke.
+    Ok(status.or(state).map(Into::into).unwrap_or("unknown".to_string()))
 }
 
 #[derive(Deserialize, Debug)]
@@ -42,11 +41,10 @@ pub struct Labels {
 }
 
 impl Notification {
-    pub fn get_priority(&self) -> String {
+    pub fn get_priority(&self) -> &str {
         self.labels
             .as_ref()
-            .and_then(|labels| labels.priority.as_ref())
-            .cloned()
-            .unwrap_or_else(|| "default".to_string())
+            .and_then(|labels| labels.priority.as_deref())
+            .unwrap_or("default")
     }
 }

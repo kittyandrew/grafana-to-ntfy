@@ -10,7 +10,6 @@ pub struct BAuth {
 
 #[derive(Debug)]
 pub enum BAuthError {
-    Missing,
     Invalid,
 }
 
@@ -19,21 +18,26 @@ impl<'r> FromRequest<'r> for BAuth {
     type Error = BAuthError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match req.headers().get_one("Authorization") {
-            Some(data) => match data.strip_prefix("Basic ") {
-                Some(raw) => match base64::engine::general_purpose::STANDARD.decode(raw) {
-                    Ok(v) => match String::from_utf8(v).unwrap_or_default().split_once(":") {
-                        Some((u, p)) => Outcome::Success(BAuth {
-                            user: u.to_string(),
-                            pass: p.to_string(),
-                        }),
-                        None => Outcome::Error((Status::BadRequest, BAuthError::Invalid)),
-                    },
-                    Err(_) => Outcome::Error((Status::BadRequest, BAuthError::Invalid)),
-                },
-                None => Outcome::Error((Status::BadRequest, BAuthError::Invalid)),
-            },
-            None => Outcome::Error((Status::BadRequest, BAuthError::Missing)),
-        }
+        let Some(data) = req.headers().get_one("Authorization") else {
+            return Outcome::Forward(Status::Unauthorized);
+        };
+        // @NOTE: Non-Basic auth schemes are not supported — forward rather than error,
+        //  since the header is well-formed, just not applicable to this guard.
+        let Some(raw) = data.strip_prefix("Basic ") else {
+            return Outcome::Forward(Status::Unauthorized);
+        };
+        let Ok(decoded) = base64::engine::general_purpose::STANDARD.decode(raw) else {
+            return Outcome::Error((Status::BadRequest, BAuthError::Invalid));
+        };
+        let Ok(credentials) = String::from_utf8(decoded) else {
+            return Outcome::Error((Status::BadRequest, BAuthError::Invalid));
+        };
+        let Some((u, p)) = credentials.split_once(":") else {
+            return Outcome::Error((Status::BadRequest, BAuthError::Invalid));
+        };
+        Outcome::Success(BAuth {
+            user: u.to_string(),
+            pass: p.to_string(),
+        })
     }
 }

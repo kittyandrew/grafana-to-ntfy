@@ -1,17 +1,18 @@
-version: "3.7"
+# Build the image first: nix build .#docker && docker load < result
+# Update the tag below after version bumps in Cargo.toml.
 services:
   api:
     container_name: grafana-to-ntfy
-    image: grafana-to-ntfy
+    image: grafana-to-ntfy:2026.3.15
     restart: always
-    build: .
     env_file:
       - .env
     # For testing:
     ports:
       - 8080:8080
 
-networks:
-  default:
-    external:
-      name: caddynet
+# Uncomment and adjust if attaching to an existing Docker network (e.g., a reverse proxy).
+# networks:
+#   default:
+#     external: true
+#     name: caddynet

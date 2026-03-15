@@ -17,12 +17,12 @@ NTFY_BAUTH_USER=grafana     # optional (required if the ntfy instance has access
 NTFY_BAUTH_PASS=secret      # optional (required if the ntfy instance has access control enabled)
 BAUTH_USER=admin
 BAUTH_PASS=test
-MARKDOWN=true               # optional, boolean (enable Markdown formatting)
+MARKDOWN=true               # optional (enable Markdown formatting)
 ```
 
 **Note:** ntfy.sh urls are publicly available, so, if you are not using NTFY BAUTH, better add some random string in the end to make it safer (or make the url path completely random).  
   
-Then you would need to spin up the container, you can use existing Dockefile and docker-compose.yml or create your own. Just make sure that container is on the same network as grafana instance, so grafana will be able to send requests.  
+Then you would need to spin up the container. Build the Docker image with Nix (`nix build .#docker && docker load < result`) or pull from Docker Hub (`docker pull kittyandrew/grafana-to-ntfy:2026.3.15`), then use `docker-compose.yml` or create your own. Just make sure that container is on the same network as grafana instance, so grafana will be able to send requests.  
   
 When the service is running, you can subscribe to configured ntfy.sh topic (in this example it's `test_b694d03045a7502f`) in your phone ntfy app to test it.  
 
@@ -49,7 +49,7 @@ The following is a basic configuration for alertmanager. For all the options ple
 ```json
 {
   "global": {
-    "resolve_timeout": "1m",
+    "resolve_timeout": "1m"
   },
   "receivers": [
     {
@@ -63,7 +63,7 @@ The following is a basic configuration for alertmanager. For all the options ple
             }
           },
           "send_resolved": true,
-          "url": "http://0.0.0.0:8080"
+          "url": "http://127.0.0.1:8080"
         }
       ]
     }
@@ -82,13 +82,13 @@ curl -H 'Content-Type: application/json' \
   -d '[{"labels":{"alertname":"myalert"}}]' http://127.0.0.1:9093/api/v2/alerts
 ```
 
-After a while you should recive a notification similar to this:
+After a while you should receive a notification similar to this:
 
 ![phone_screenshot_4](./assets/alertmanager.jpg)
 
 ## Priority support
 
-To use [ntfy prioritization](https://docs.ntfy.sh/publish/#message-priority), you need to asign label `priority` to your alert.  
+To use [ntfy prioritization](https://docs.ntfy.sh/publish/#message-priority), you need to assign label `priority` to your alert.  
 Value of label can be either priority `ID` or `Name` from the doc above, so, for max priority - `max`, `urgent` or `5`.  
 
 ## Testing

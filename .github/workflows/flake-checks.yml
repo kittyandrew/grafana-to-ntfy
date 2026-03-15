@@ -6,16 +6,42 @@ on:
   pull_request:
 
 jobs:
-  checks:
+  discover:
     runs-on: ubuntu-latest
+    outputs:
+      checks: ${{ steps.list.outputs.checks }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6 # 26.06.2025
+        uses: actions/checkout@v6 # 15.03.2026
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31 # 26.06.2025
+        uses: cachix/install-nix-action@v31 # 15.03.2026
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v8 # 15.03.2026
+
+      - name: Discover flake checks
+        id: list
+        run: echo "checks=$(nix flake show --json | jq -c '.checks["x86_64-linux"] | keys')" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check: ${{ fromJson(needs.discover.outputs.checks) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6 # 15.03.2026
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31 # 15.03.2026
         with:
           enable_kvm: true
 
-      - name: Run flake checks
-        run: nix flake check --print-build-logs --show-trace
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v8 # 15.03.2026
+
+      - name: Run ${{ matrix.check }}
+        run: nix build .#checks.x86_64-linux.${{ matrix.check }} --print-build-logs --show-trace
