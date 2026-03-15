@@ -72,9 +72,11 @@ Tests are defined in `tests/` using NixOS test framework. The check matrix is de
 The Docker image is built with Nix (`pkgs.dockerTools.buildLayeredImage`), not a Dockerfile:
 
 ```bash
-nix build .#docker          # produces ./result (image tarball)
+nix build .#docker          # produces ./result (image tarball for the current system)
 docker load < result         # loads into local Docker daemon
 ```
+
+The flake produces Docker images for both x86_64-linux and aarch64-linux. `nix build .#docker` builds for the current system; to target a specific architecture: `nix build .#packages.aarch64-linux.docker`.
 
 The image is a minimal Nix-built image with only the binary, CA certificates, curl, and a healthcheck script. Rocket config is set via env vars in the image (`ROCKET_PORT`, `ROCKET_ADDRESS`).
 
@@ -103,7 +105,7 @@ Configured via `.env` file. See `.env.sample` for the canonical list with descri
 
 - **`lint.yml`** — Runs `cargo fmt --check`, `cargo clippy -- -D warnings`, `alejandra --check`, and `deadnix --fail` on push/PR. Fast — no VMs or heavy builds.
 - **`flake-checks.yml`** — Dynamically discovers all flake checks via `nix flake show --json` and runs each as a separate GitHub Actions matrix job on push/PR. Uses `fail-fast: false` so all checks run independently — adding a new check to `flake.nix` automatically adds it to CI. Both jobs use `DeterminateSystems/magic-nix-cache-action` to cache the Nix store between runs.
-- **`build.yml`** — Nix-built Docker image push to Docker Hub, gated on both `flake-checks.yml` and `lint.yml` success via `workflow_run`. Builds with `nix build .#docker`, then tags with version + git SHA and pushes. Only runs on master.
+- **`build.yml`** — Multi-arch Docker image push to Docker Hub. Three-job pipeline: `verify` (confirms both lint and flake-checks succeeded for the triggering commit, extracts version) → `push-arch` (matrix of amd64/arm64, builds natively on `ubuntu-latest` and `ubuntu-24.04-arm` via `nix build .#packages.<system>.docker`, pushes arch-specific tags) → `manifest` (creates multi-arch manifests for `latest`, version, and git SHA tags). Gated on both upstream workflows via `workflow_run`. Only runs on master.
 
 ### Local CI Testing
 

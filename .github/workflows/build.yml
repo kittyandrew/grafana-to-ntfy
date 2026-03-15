@@ -7,9 +7,12 @@ on:
     branches: [master]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      head_sha: ${{ github.event.workflow_run.head_sha }}
     steps:
       # @NOTE: workflow_run fires once per triggering workflow. This step ensures we only
       #  proceed when BOTH lint and flake-checks have succeeded for the same commit.
@@ -28,12 +31,37 @@ jobs:
             fi
           done
 
-      - name: checkout code
+      - name: Checkout repository
         uses: actions/checkout@v6 # 15.03.2026
         with:
           # @NOTE: workflow_run events use the default branch HEAD, not the triggering commit.
           #  Explicitly check out the commit that passed the checks.
           ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Extract version
+        id: version
+        run: echo "version=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')" >> "$GITHUB_OUTPUT"
+
+  # @NOTE: Builds Docker images natively on each architecture's runner. GitHub provides
+  #  free arm64 runners (ubuntu-24.04-arm) for public repos, so no cross-compilation needed.
+  push-arch:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: amd64
+            nix-system: x86_64-linux
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            nix-system: aarch64-linux
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6 # 15.03.2026
+        with:
+          ref: ${{ needs.verify.outputs.head_sha }}
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31 # 15.03.2026
@@ -41,17 +69,13 @@ jobs:
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@v8 # 15.03.2026
 
-      - name: Extract version
-        id: version
-        run: echo "version=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')" >> "$GITHUB_OUTPUT"
-
       - name: Build Docker image
-        run: nix build .#docker
+        run: nix build .#packages.${{ matrix.nix-system }}.docker
 
       - name: Load image
         run: docker load < result
 
-      - name: login to docker hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v3 # 15.03.2026
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -59,12 +83,30 @@ jobs:
 
       - name: Tag and push
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          SHORT_SHA=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+          VERSION="${{ needs.verify.outputs.version }}"
           DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/grafana-to-ntfy"
-          docker tag grafana-to-ntfy:${VERSION} ${DOCKER_IMAGE}:latest
-          docker tag grafana-to-ntfy:${VERSION} ${DOCKER_IMAGE}:${VERSION}
-          docker tag grafana-to-ntfy:${VERSION} ${DOCKER_IMAGE}:sha-${SHORT_SHA}
-          docker push ${DOCKER_IMAGE}:latest
-          docker push ${DOCKER_IMAGE}:${VERSION}
-          docker push ${DOCKER_IMAGE}:sha-${SHORT_SHA}
+          docker tag "grafana-to-ntfy:${VERSION}" "${DOCKER_IMAGE}:${VERSION}-${{ matrix.arch }}"
+          docker push "${DOCKER_IMAGE}:${VERSION}-${{ matrix.arch }}"
+
+  manifest:
+    needs: [verify, push-arch]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3 # 15.03.2026
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Create and push multi-arch manifests
+        run: |
+          VERSION="${{ needs.verify.outputs.version }}"
+          SHORT_SHA=$(echo "${{ needs.verify.outputs.head_sha }}" | cut -c1-7)
+          DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/grafana-to-ntfy"
+          for TAG in latest "${VERSION}" "sha-${SHORT_SHA}"; do
+            # @NOTE: --amend allows re-runs to overwrite a locally cached manifest.
+            docker manifest create --amend "${DOCKER_IMAGE}:${TAG}" \
+              "${DOCKER_IMAGE}:${VERSION}-amd64" \
+              "${DOCKER_IMAGE}:${VERSION}-arm64"
+            docker manifest push "${DOCKER_IMAGE}:${TAG}"
+          done

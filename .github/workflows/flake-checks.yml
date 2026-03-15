@@ -20,6 +20,8 @@ jobs:
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@v8 # 15.03.2026
 
+      # @NOTE: Only discovers x86_64-linux checks. The flake also defines aarch64-linux checks,
+      #  but CI runs on x86_64 runners and NixOS VM tests require KVM on the matching architecture.
       - name: Discover flake checks
         id: list
         run: echo "checks=$(nix flake show --json | jq -c '.checks["x86_64-linux"] | keys')" >> "$GITHUB_OUTPUT"
