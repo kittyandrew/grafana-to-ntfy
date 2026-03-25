@@ -3,8 +3,7 @@ edition = "2021"
 name = "grafana-to-ntfy"
 rust-version = "1.80.0"
 version = "2026.3.15"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "AGPL-3.0-only"
 
 [dependencies]
 base64 = "0.22.1"

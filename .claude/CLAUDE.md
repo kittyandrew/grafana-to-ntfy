@@ -116,3 +116,14 @@ act -j discover push > ci-test.log 2>&1
 ```
 
 This validates the workflow YAML syntax, runs `nix flake show --json | jq` inside an act container, and confirms all flake checks are discovered correctly. The dynamic matrix (`fromJson`) and `workflow_run` trigger are not supported by `act` — those are validated by the underlying commands already documented above (nix build for checks, nix build .#docker for the image).
+
+## Nixpkgs
+
+This project is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs) and maintained upstream by kittyandrew. A shallow clone of nixpkgs should live at `~/dev/nixos/nixpkgs/` — if it doesn't exist, clone it with `git clone --depth 1 https://github.com/NixOS/nixpkgs.git ~/dev/nixos/nixpkgs`. Relevant files:
+
+- **Package:** `pkgs/by-name/gr/grafana-to-ntfy/package.nix`
+- **NixOS module:** `nixos/modules/services/monitoring/grafana-to-ntfy.nix`
+- **NixOS test:** `nixos/tests/grafana-to-ntfy.nix` (wired in `nixos/tests/all-tests.nix`)
+- **Contributor guides:** `CONTRIBUTING.md`, `pkgs/README.md`, `doc/languages-frameworks/rust.section.md`
+
+Routine version bumps (new `tag`, `hash`, `cargoHash`) are handled automatically by `nix-update-script` — the nixpkgs bot infrastructure creates PRs for these, so they just need kittyandrew's review and approval upstream. Manual nixpkgs work is only needed when something significant changes: new env vars that should become module options, module bug fixes, test updates, or structural changes. Remind kittyandrew to check for and approve pending automated PRs after releases.
