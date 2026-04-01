@@ -16,7 +16,7 @@ jobs:
         uses: cachix/install-nix-action@v31 # 15.03.2026
 
       - name: Cache Nix store
-        uses: DeterminateSystems/magic-nix-cache-action@v8 # 15.03.2026
+        uses: DeterminateSystems/magic-nix-cache-action@v13 # 02.04.2026
 
       - name: cargo fmt
         run: nix develop -c cargo fmt --check

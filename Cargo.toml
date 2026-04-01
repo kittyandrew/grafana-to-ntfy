@@ -2,7 +2,7 @@
 edition = "2021"
 name = "grafana-to-ntfy"
 rust-version = "1.80.0"
-version = "2026.3.15"
+version = "2026.4.2"
 license = "AGPL-3.0-only"
 
 [dependencies]
@@ -13,5 +13,5 @@ reqwest = { version = "0.13.2", default-features = false, features = [
     "rustls",
 ] }
 rocket = { version = "0.5.1", features = ["json"] }
-sha2 = "0.10"
+sha2 = "0.11"
 subtle = "2"

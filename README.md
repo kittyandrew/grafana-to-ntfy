@@ -22,7 +22,7 @@ MARKDOWN=true               # optional (enable Markdown formatting)
 
 **Note:** ntfy.sh urls are publicly available, so, if you are not using NTFY BAUTH, better add some random string in the end to make it safer (or make the url path completely random).  
   
-Then you would need to spin up the container. Build the Docker image with Nix (`nix build .#docker && docker load < result`) or pull from Docker Hub (`docker pull kittyandrew/grafana-to-ntfy:2026.3.15`), then use `docker-compose.yml` or create your own. Just make sure that container is on the same network as grafana instance, so grafana will be able to send requests.  
+Then you would need to spin up the container. Build the Docker image with Nix (`nix build .#docker && docker load < result`) or pull from Docker Hub (`docker pull kittyandrew/grafana-to-ntfy:2026.4.2`), then use `docker-compose.yml` or create your own. Just make sure that container is on the same network as grafana instance, so grafana will be able to send requests.  
   
 When the service is running, you can subscribe to configured ntfy.sh topic (in this example it's `test_b694d03045a7502f`) in your phone ntfy app to test it.  
 
