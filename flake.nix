@@ -92,6 +92,7 @@
                 inputs.fenix.packages.${system}.complete.toolchain
                 alejandra
                 bore-cli
+                cargo-audit
                 deadnix
                 pythonCustom
                 act # for testing gh workflows locally
