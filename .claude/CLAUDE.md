@@ -34,6 +34,10 @@ alejandra --check .                          # Nix formatting
 deadnix --fail --no-lambda-pattern-names .   # unused Nix code
 ```
 
+`cargo audit` (from `cargo-audit` in the dev shell) is not CI-enforced but
+should be run when bumping deps or investigating security advisories — it
+scans `Cargo.lock` against the RustSec advisory database.
+
 ### Integration Tests
 
 There are no unit tests. All testing is NixOS VM-based integration tests that spin up real Grafana/Prometheus/Alertmanager + ntfy.sh instances:
