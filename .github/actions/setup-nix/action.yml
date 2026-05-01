@@ -1,5 +1,5 @@
 name: Setup Nix
-description: Checkout, install Nix, and enable the magic Nix cache. Centralises the dated action pins used across the workflows.
+description: Install Nix and enable the magic Nix cache. Caller must run actions/checkout first — local composite actions can't bootstrap their own checkout.
 
 inputs:
   enable-kvm:
@@ -10,9 +10,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6 # 15.03.2026
-
     - name: Install Nix
       uses: cachix/install-nix-action@v31 # 15.03.2026
       with:

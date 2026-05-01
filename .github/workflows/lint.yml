@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6 # 15.03.2026
+
       - name: Setup Nix
         uses: ./.github/actions/setup-nix
 
