@@ -3,7 +3,7 @@
 services:
   api:
     container_name: grafana-to-ntfy
-    image: grafana-to-ntfy:2026.4.29
+    image: grafana-to-ntfy:2026.5.2
     restart: always
     env_file:
       - .env

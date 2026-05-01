@@ -1,42 +1,19 @@
 name: build and push to dockerhub
 
+# @NOTE: Reusable workflow — invoked from ci.yml only after lint and flake-checks
+#  succeed (via needs:), and only on master push (gated by ci.yml's `if:`).
 on:
-  workflow_run:
-    workflows: ["nix flake checks", "lint"]
-    types: [completed]
-    branches: [master]
+  workflow_call:
 
 jobs:
-  verify:
+  prepare:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 5
     outputs:
       version: ${{ steps.version.outputs.version }}
-      head_sha: ${{ github.event.workflow_run.head_sha }}
     steps:
-      # @NOTE: workflow_run fires once per triggering workflow. This step ensures we only
-      #  proceed when BOTH lint and flake-checks have succeeded for the same commit.
-      #  If one finishes before the other, this step fails and the build re-triggers
-      #  when the second workflow completes.
-      - name: Verify all required checks passed
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          SHA="${{ github.event.workflow_run.head_sha }}"
-          for WORKFLOW in "lint.yml" "flake-checks.yml"; do
-            CONCLUSION=$(gh api "repos/${{ github.repository }}/actions/workflows/$WORKFLOW/runs?head_sha=$SHA&per_page=1" --jq '.workflow_runs[0].conclusion')
-            if [ "$CONCLUSION" != "success" ]; then
-              echo "Workflow $WORKFLOW has not succeeded (status: $CONCLUSION), skipping build"
-              exit 1
-            fi
-          done
-
       - name: Checkout repository
         uses: actions/checkout@v6 # 15.03.2026
-        with:
-          # @NOTE: workflow_run events use the default branch HEAD, not the triggering commit.
-          #  Explicitly check out the commit that passed the checks.
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Extract version
         id: version
@@ -45,7 +22,7 @@ jobs:
   # @NOTE: Builds Docker images natively on each architecture's runner. GitHub provides
   #  free arm64 runners (ubuntu-24.04-arm) for public repos, so no cross-compilation needed.
   push-arch:
-    needs: verify
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -57,17 +34,10 @@ jobs:
             arch: arm64
             nix-system: aarch64-linux
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6 # 15.03.2026
-        with:
-          ref: ${{ needs.verify.outputs.head_sha }}
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31 # 15.03.2026
-
-      - name: Cache Nix store
-        uses: DeterminateSystems/magic-nix-cache-action@v13 # 02.04.2026
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
 
       - name: Build Docker image
         run: nix build .#packages.${{ matrix.nix-system }}.docker
@@ -83,14 +53,15 @@ jobs:
 
       - name: Tag and push
         run: |
-          VERSION="${{ needs.verify.outputs.version }}"
+          VERSION="${{ needs.prepare.outputs.version }}"
           DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/grafana-to-ntfy"
           docker tag "grafana-to-ntfy:${VERSION}" "${DOCKER_IMAGE}:${VERSION}-${{ matrix.arch }}"
           docker push "${DOCKER_IMAGE}:${VERSION}-${{ matrix.arch }}"
 
   manifest:
-    needs: [verify, push-arch]
+    needs: [prepare, push-arch]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Login to Docker Hub
         uses: docker/login-action@v4 # 02.04.2026
@@ -100,8 +71,8 @@ jobs:
 
       - name: Create and push multi-arch manifests
         run: |
-          VERSION="${{ needs.verify.outputs.version }}"
-          SHORT_SHA=$(echo "${{ needs.verify.outputs.head_sha }}" | cut -c1-7)
+          VERSION="${{ needs.prepare.outputs.version }}"
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/grafana-to-ntfy"
           for TAG in latest "${VERSION}" "sha-${SHORT_SHA}"; do
             # @NOTE: --amend allows re-runs to overwrite a locally cached manifest.

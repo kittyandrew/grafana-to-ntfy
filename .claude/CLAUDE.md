@@ -107,19 +107,22 @@ Configured via `.env` file. See `.env.sample` for the canonical list with descri
 
 ## CI
 
-- **`lint.yml`** — Runs `cargo fmt --check`, `cargo clippy -- -D warnings`, `alejandra --check`, and `deadnix --fail` on push/PR. Fast — no VMs or heavy builds.
-- **`flake-checks.yml`** — Dynamically discovers all flake checks via `nix flake show --json` and runs each as a separate GitHub Actions matrix job on push/PR. Uses `fail-fast: false` so all checks run independently — adding a new check to `flake.nix` automatically adds it to CI. Both jobs use `DeterminateSystems/magic-nix-cache-action` to cache the Nix store between runs.
-- **`build.yml`** — Multi-arch Docker image push to Docker Hub. Three-job pipeline: `verify` (confirms both lint and flake-checks succeeded for the triggering commit, extracts version) → `push-arch` (matrix of amd64/arm64, builds natively on `ubuntu-latest` and `ubuntu-24.04-arm` via `nix build .#packages.<system>.docker`, pushes arch-specific tags) → `manifest` (creates multi-arch manifests for `latest`, version, and git SHA tags). Gated on both upstream workflows via `workflow_run`. Only runs on master.
+- **`ci.yml`** — Single entrypoint for push to master and PR. Calls `lint.yml` and `flake-checks.yml` in parallel via `workflow_call`, then `build.yml` only when both succeed on a master push (gated by `if: github.event_name == 'push' && github.ref == 'refs/heads/master'`). Passes secrets via `secrets: inherit`.
+- **`lint.yml`** (reusable) — Runs `cargo fmt --check`, `cargo clippy -- -D warnings`, `alejandra --check`, and `deadnix --fail`. Fast — no VMs or heavy builds.
+- **`flake-checks.yml`** (reusable) — Dynamically discovers all flake checks via `nix flake show --json` and runs each as a separate matrix job. Uses `fail-fast: false` so all checks run independently — adding a new check to `flake.nix` automatically adds it to CI. Uses `DeterminateSystems/magic-nix-cache-action` for cross-run caching.
+- **`build.yml`** (reusable) — Multi-arch Docker image push to Docker Hub. Two-job pipeline (no separate verify step — gating is done by `ci.yml` via `needs:`): `prepare` (extracts version from Cargo.toml) → `push-arch` (matrix of amd64/arm64, builds natively on `ubuntu-latest` and `ubuntu-24.04-arm` via `nix build .#packages.<system>.docker`, pushes arch-specific tags) → `manifest` (creates multi-arch manifests for `latest`, version, and git SHA tags).
+
+The three reusable workflows are `workflow_call`-only — direct push/PR triggers were removed so `ci.yml` is the sole entrypoint. This eliminated a `workflow_run` race that produced a spurious failed `build.yml` run on every master push (lint finished first → build triggered → flake-checks not done yet → verify failed → second build triggered when flake-checks completed → success).
 
 ### Local CI Testing
 
-The dev shell includes `act` for testing GitHub Actions workflows locally:
+For YAML/Actions syntax validation, prefer `actionlint` over `act` — it's faster and understands GitHub Actions semantics natively:
 
 ```bash
-act -j discover push > ci-test.log 2>&1
+nix shell nixpkgs#actionlint -c actionlint .github/workflows/*.yml
 ```
 
-This validates the workflow YAML syntax, runs `nix flake show --json | jq` inside an act container, and confirms all flake checks are discovered correctly. The dynamic matrix (`fromJson`) and `workflow_run` trigger are not supported by `act` — those are validated by the underlying commands already documented above (nix build for checks, nix build .#docker for the image).
+`act` is in the dev shell but has limited support for `workflow_call` and dynamic `fromJson` matrices, so the orchestrator → reusable pattern doesn't run cleanly through it. To exercise an individual reusable workflow you can invoke it directly with `act -W .github/workflows/<file>.yml -j <job> workflow_call`, but full pipeline behavior is best validated by the underlying commands already documented above (`nix build` for checks, `nix build .#docker` for the image).
 
 ## Nixpkgs
 

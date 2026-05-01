@@ -1,0 +1,36 @@
+name: CI
+
+# @NOTE: Single entrypoint for push and PR events. Calls lint.yml and flake-checks.yml
+#  in parallel, then build.yml when both pass on a master push. Replaces the previous
+#  workflow_run-based gating in build.yml, which raced when lint finished before
+#  flake-checks and produced a spurious failed build run on every master push.
+on:
+  push:
+    branches: [master]
+    paths-ignore: ["**.md", "docs/**", ".claude/**", "assets/**"]
+  pull_request:
+    paths-ignore: ["**.md", "docs/**", ".claude/**", "assets/**"]
+
+# @NOTE: Cancel in-flight runs on PR force-pushes; serialize master pushes so two rapid
+#  master commits don't race to push the same Docker manifest.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# @NOTE: Default GITHUB_TOKEN scope is contents:write — none of these jobs need write.
+#  Docker Hub auth uses DOCKER_USERNAME/DOCKER_PASSWORD secrets, not GITHUB_TOKEN.
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  flake-checks:
+    uses: ./.github/workflows/flake-checks.yml
+
+  build:
+    needs: [lint, flake-checks]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/build.yml
+    secrets: inherit

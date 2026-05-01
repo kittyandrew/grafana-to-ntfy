@@ -1,0 +1,22 @@
+name: Setup Nix
+description: Checkout, install Nix, and enable the magic Nix cache. Centralises the dated action pins used across the workflows.
+
+inputs:
+  enable-kvm:
+    description: Set to 'true' for jobs that run NixOS VM tests.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6 # 15.03.2026
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v31 # 15.03.2026
+      with:
+        enable_kvm: ${{ inputs.enable-kvm == 'true' }}
+
+    - name: Cache Nix store
+      uses: DeterminateSystems/magic-nix-cache-action@v13 # 02.04.2026

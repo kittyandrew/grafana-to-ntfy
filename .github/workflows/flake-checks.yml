@@ -1,24 +1,18 @@
 name: nix flake checks
 
+# @NOTE: Reusable workflow — invoked from ci.yml. See lint.yml for the rationale.
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
+  workflow_call:
 
 jobs:
   discover:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       checks: ${{ steps.list.outputs.checks }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6 # 15.03.2026
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31 # 15.03.2026
-
-      - name: Cache Nix store
-        uses: DeterminateSystems/magic-nix-cache-action@v13 # 02.04.2026
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
 
       # @NOTE: Only discovers x86_64-linux checks. The flake also defines aarch64-linux checks,
       #  but CI runs on x86_64 runners and NixOS VM tests require KVM on the matching architecture.
@@ -29,21 +23,16 @@ jobs:
   check:
     needs: discover
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         check: ${{ fromJson(needs.discover.outputs.checks) }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6 # 15.03.2026
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31 # 15.03.2026
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
         with:
-          enable_kvm: true
-
-      - name: Cache Nix store
-        uses: DeterminateSystems/magic-nix-cache-action@v13 # 02.04.2026
+          enable-kvm: "true"
 
       - name: Run ${{ matrix.check }}
         run: nix build .#checks.x86_64-linux.${{ matrix.check }} --print-build-logs --show-trace
