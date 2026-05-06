@@ -6,11 +6,11 @@
     #  updated to test against latest versions on unstable channel. Note, that versions
     #  of the programs below are written as of the date on this comment and might be
     #  inaccurate, especially for the unstable channel.
-    #                                                            - andrew, Mar 14 2026
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"; # Grafana v12.4.0+, Prometheus v3.10.0+
-    nixpkgs-25-11.url = "github:NixOS/nixpkgs/nixos-25.11"; # Grafana v12.3.4, Prometheus v3.7.2
+    #                                                            - andrew, May 6 2026
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"; # Grafana v13.0.1+, Prometheus v3.11.3+
+    nixpkgs-25-11.url = "github:NixOS/nixpkgs/nixos-25.11"; # Grafana v12.3.6, Prometheus v3.7.2
     nixpkgs-25-05.url = "github:NixOS/nixpkgs/nixos-25.05"; # Grafana v12.0.7, Prometheus v3.5.0
-    nixpkgs-24-11.url = "github:NixOS/nixpkgs/nixos-24.11"; # Grafana v11.3.7, Prometheus v2.55.0
+    nixpkgs-24-11.url = "github:NixOS/nixpkgs/nixos-24.11"; # Grafana v11.3.7+security-01, Prometheus v2.55.0
     nixpkgs-24-05.url = "github:NixOS/nixpkgs/nixos-24.05"; # Grafana v10.4.14, Prometheus v2.54.1
     nixpkgs-23-05.url = "github:NixOS/nixpkgs/nixos-23.05"; # Grafana v9.5.15, Prometheus v2.44.0
     flake-parts.url = "github:hercules-ci/flake-parts";
