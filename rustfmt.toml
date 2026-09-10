@@ -1,1 +1,4 @@
 max_width = 131
+use_small_heuristics = "Max"
+fn_params_layout = "Compressed"
+short_array_element_width_threshold = 131
