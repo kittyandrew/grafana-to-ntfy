@@ -1,14 +1,14 @@
 [package]
 edition = "2021"
 name = "grafana-to-ntfy"
-rust-version = "1.80.0"
+rust-version = "1.88.0"
 version = "2026.5.2"
 license = "AGPL-3.0-only"
 
 [dependencies]
 base64 = "0.22.1"
 dotenvy = "0.15.7"
-reqwest = { version = "0.13.2", default-features = false, features = [
+reqwest = { version = "0.13.4", default-features = false, features = [
     "http2",
     "rustls",
 ] }
