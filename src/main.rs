@@ -67,8 +67,8 @@ async fn handle_alert(
     //   ^4 - https://ntfy.sh/docs/emojis
     //
     let tags_header = match data.status.as_str() {
-        "alerting" | "firing" => format!("warning, {}", &data.status),
-        "ok" | "resolved" => format!("white_check_mark, {}", &data.status),
+        "alerting" | "firing" => format!("warning, {}", data.status),
+        "ok" | "resolved" => format!("white_check_mark, {}", data.status),
         _ => data.status.to_string(),
     };
 
