@@ -1,11 +1,7 @@
 use reqwest::Client;
-use rocket::http::Status;
-use rocket::serde::json::{json, Json, Value};
-use rocket::{get, launch, post, routes, State};
+use rocket::{State, get, http::Status, launch, post, routes, serde::json::Json, serde::json::Value, serde::json::json};
 use sha2::{Digest, Sha256};
-use std::env::var;
-use std::sync::LazyLock;
-use std::time::Duration;
+use std::{env::var, sync::LazyLock, time::Duration};
 use subtle::ConstantTimeEq;
 
 mod bauth;
@@ -32,9 +28,7 @@ fn health() -> Result<Value, Status> {
 
 #[post("/", format = "application/json", data = "<data>")]
 async fn handle_alert(
-    data: Json<data::Notification>,
-    bauth: Option<bauth::BAuth>,
-    client: &State<Client>,
+    data: Json<data::Notification>, bauth: Option<bauth::BAuth>, client: &State<Client>,
 ) -> Result<Value, Status> {
     if NTFY_URL.is_empty() {
         return Err(Status::ServiceUnavailable);
@@ -124,9 +118,6 @@ fn rocket() -> _ {
         );
     }
 
-    let client = Client::builder()
-        .timeout(Duration::from_secs(30))
-        .build()
-        .expect("failed to build reqwest client");
+    let client = Client::builder().timeout(Duration::from_secs(30)).build().expect("failed to build reqwest client");
     rocket::build().mount("/", routes![handle_alert, health]).manage(client)
 }

@@ -42,9 +42,6 @@ pub struct Labels {
 
 impl Notification {
     pub fn get_priority(&self) -> &str {
-        self.labels
-            .as_ref()
-            .and_then(|labels| labels.priority.as_deref())
-            .unwrap_or("default")
+        self.labels.as_ref().and_then(|labels| labels.priority.as_deref()).unwrap_or("default")
     }
 }

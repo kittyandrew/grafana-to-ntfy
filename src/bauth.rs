@@ -1,6 +1,5 @@
 use base64::Engine;
-use rocket::http::Status;
-use rocket::request::{FromRequest, Outcome, Request};
+use rocket::{http::Status, request::FromRequest, request::Outcome, request::Request};
 
 #[derive(Debug)]
 pub struct BAuth {
@@ -35,9 +34,6 @@ impl<'r> FromRequest<'r> for BAuth {
         let Some((u, p)) = credentials.split_once(":") else {
             return Outcome::Error((Status::BadRequest, BAuthError::Invalid));
         };
-        Outcome::Success(BAuth {
-            user: u.to_string(),
-            pass: p.to_string(),
-        })
+        Outcome::Success(BAuth { user: u.to_string(), pass: p.to_string() })
     }
 }
