@@ -2,9 +2,6 @@
 
 This service is a utility webhook server for the grafana alert webhooks as well as prometheus alertmanager, which sends a notification to your ntfy url ([ntfy.sh](https://ntfy.sh/)), and consequently to your phone/desktop.
 
-The server uses Rocket 0.6.0-dev, pinned to an upstream commit in `Cargo.toml`.
-This moves HTTP/2 to Hyper 1 and patched h2 while preserving HTTP/1.1 and HTTP/2 support.
-
 **New:**
 
 - [ntfy priority support](#priority-support)
