@@ -50,6 +50,19 @@
     primary.wait_for_unit("grafana-to-ntfy-no-url")
     primary.wait_for_open_port(${misconfiguredPort})
 
+    with subtest("HTTP/2 health and authentication"):
+        response = primary.succeed(
+            "curl --http2-prior-knowledge -fsS -o /dev/null -w '%{http_version}:%{http_code}' "
+            "http://${c.host}:${c.gtn-port}/health"
+        ).strip()
+        assert response == "2:200", response
+        response = primary.succeed(
+            "curl --http2-prior-knowledge -sS -o /dev/null -w '%{http_version}:%{http_code}' "
+            "-H 'Content-Type: application/json' -d '{\"status\": \"firing\"}' "
+            "http://${c.host}:${c.gtn-port}"
+        ).strip()
+        assert response == "2:401", response
+
     # Test 1: Wrong credentials → 401 Unauthorized
     status = primary.succeed(
         "curl -s -o /dev/null -w '%{http_code}' "
