@@ -12,7 +12,7 @@ jobs:
       checks: ${{ steps.list.outputs.checks }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6 # 15.03.2026
+        uses: actions/checkout@v7 # 15.03.2026
 
       - name: Setup Nix
         uses: ./.github/actions/setup-nix
@@ -33,7 +33,7 @@ jobs:
         check: ${{ fromJson(needs.discover.outputs.checks) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6 # 15.03.2026
+        uses: actions/checkout@v7 # 15.03.2026
 
       - name: Setup Nix
         uses: ./.github/actions/setup-nix
