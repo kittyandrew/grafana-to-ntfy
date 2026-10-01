@@ -28,7 +28,7 @@ in
   #  testing against. Using `pkgs.testers.runNixOSTest` (unstable) caused unstable's
   #  services.grafana module to be applied to older Grafana packages, breaking startup
   #  on Grafana 9.x-12.x when unstable moved to 13.x layout.
-  #                                                            - andrew, May 6 2026
+  #                                                            - andrew, May 6, 2026
   versioned-pkgs.legacyPackages.${system}.testers.runNixOSTest {
     node.specialArgs = {
       inherit system;

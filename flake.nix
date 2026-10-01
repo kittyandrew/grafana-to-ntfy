@@ -6,7 +6,7 @@
     #  updated to test against latest versions on unstable channel. Note, that versions
     #  of the programs below are written as of the date on this comment and might be
     #  inaccurate, especially for the unstable channel.
-    #                                                            - andrew, May 6 2026
+    #                                                            - andrew, May 6, 2026
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"; # Grafana v13.0.1+, Prometheus v3.11.3+
     nixpkgs-25-11.url = "github:NixOS/nixpkgs/nixos-25.11"; # Grafana v12.3.6, Prometheus v3.7.2
     nixpkgs-25-05.url = "github:NixOS/nixpkgs/nixos-25.05"; # Grafana v12.0.7, Prometheus v3.5.0

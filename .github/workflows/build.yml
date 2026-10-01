@@ -1,9 +1,7 @@
 name: build and push to dockerhub
 
-# @NOTE: Reusable workflow — invoked from ci.yml only after lint and flake-checks
-#  succeed (via needs:), and only on master push (gated by ci.yml's `if:`).
 on:
-  workflow_call:
+  workflow_call: # ci.yml gates this on successful lint/tests and master pushes.
 
 jobs:
   prepare:
@@ -13,14 +11,12 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6 # 15.03.2026
+        uses: actions/checkout@v7 # Oct 1, 2026
 
       - name: Extract version
         id: version
         run: echo "version=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')" >> "$GITHUB_OUTPUT"
 
-  # @NOTE: Builds Docker images natively on each architecture's runner. GitHub provides
-  #  free arm64 runners (ubuntu-24.04-arm) for public repos, so no cross-compilation needed.
   push-arch:
     needs: prepare
     strategy:
@@ -33,11 +29,11 @@ jobs:
           - runner: ubuntu-24.04-arm
             arch: arm64
             nix-system: aarch64-linux
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }} # GitHub provides free arm64 runners for public repositories; each image builds natively.
     timeout-minutes: 30
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6 # 15.03.2026
+        uses: actions/checkout@v7 # Oct 1, 2026
 
       - name: Setup Nix
         uses: ./.github/actions/setup-nix
@@ -49,7 +45,7 @@ jobs:
         run: docker load < result
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v4 # 02.04.2026
+        uses: docker/login-action@v4 # Apr 2, 2026
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -67,7 +63,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Login to Docker Hub
-        uses: docker/login-action@v4 # 02.04.2026
+        uses: docker/login-action@v4 # Apr 2, 2026
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -78,7 +74,7 @@ jobs:
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/grafana-to-ntfy"
           for TAG in latest "${VERSION}" "sha-${SHORT_SHA}"; do
-            # @NOTE: --amend allows re-runs to overwrite a locally cached manifest.
+            # --amend permits reruns to replace the local manifest.
             docker manifest create --amend "${DOCKER_IMAGE}:${TAG}" \
               "${DOCKER_IMAGE}:${VERSION}-amd64" \
               "${DOCKER_IMAGE}:${VERSION}-arm64"
