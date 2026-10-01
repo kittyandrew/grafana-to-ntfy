@@ -1,8 +1,7 @@
 name: nix flake checks
 
-# @NOTE: Reusable workflow — invoked from ci.yml. See lint.yml for the rationale.
 on:
-  workflow_call:
+  workflow_call: # ci.yml owns the push/PR triggers.
 
 jobs:
   discover:
@@ -12,15 +11,14 @@ jobs:
       checks: ${{ steps.list.outputs.checks }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7 # 15.03.2026
+        uses: actions/checkout@v7 # Oct 1, 2026
 
       - name: Setup Nix
         uses: ./.github/actions/setup-nix
 
-      # @NOTE: Only discovers x86_64-linux checks. The flake also defines aarch64-linux checks,
-      #  but CI runs on x86_64 runners and NixOS VM tests require KVM on the matching architecture.
       - name: Discover flake checks
         id: list
+        # VM tests require matching-architecture KVM; CI runners are x86_64.
         run: echo "checks=$(nix flake show --json | jq -c '.checks["x86_64-linux"] | keys')" >> "$GITHUB_OUTPUT"
 
   check:
@@ -33,7 +31,7 @@ jobs:
         check: ${{ fromJson(needs.discover.outputs.checks) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7 # 15.03.2026
+        uses: actions/checkout@v7 # Oct 1, 2026
 
       - name: Setup Nix
         uses: ./.github/actions/setup-nix

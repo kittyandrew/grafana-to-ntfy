@@ -1,10 +1,7 @@
 name: lint
 
-# @NOTE: Reusable workflow — invoked from ci.yml. Direct push/PR triggers were removed
-#  to make ci.yml the single entrypoint, so lint and flake-checks share one parent run
-#  instead of racing against build.yml via workflow_run.
 on:
-  workflow_call:
+  workflow_call: # ci.yml owns the push/PR triggers.
 
 jobs:
   lint:
@@ -12,7 +9,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7 # 15.03.2026
+        uses: actions/checkout@v7 # Oct 1, 2026
 
       - name: Setup Nix
         uses: ./.github/actions/setup-nix

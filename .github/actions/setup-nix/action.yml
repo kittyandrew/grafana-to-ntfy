@@ -11,9 +11,9 @@ runs:
   using: composite
   steps:
     - name: Install Nix
-      uses: cachix/install-nix-action@v31 # 15.03.2026
+      uses: cachix/install-nix-action@v31 # Mar 15, 2026
       with:
         enable_kvm: ${{ inputs.enable-kvm == 'true' }}
 
     - name: Cache Nix store
-      uses: DeterminateSystems/magic-nix-cache-action@v13 # 02.04.2026
+      uses: DeterminateSystems/magic-nix-cache-action@v13 # Apr 2, 2026
