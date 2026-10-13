@@ -1,5 +1,14 @@
 # Grafana-to-ntfy
 
+> [!WARNING]
+> **You probably don't need this anymore.** Since v2.14.0 (Aug 2025), ntfy reads Grafana and Alertmanager
+> webhooks itself: point the webhook at `https://<your ntfy>/<topic>?template=grafana` (or
+> `?template=alertmanager`), see [pre-defined templates](https://docs.ntfy.sh/publish/#pre-defined-templates).
+> Grafana 12.0 and later can also post ntfy's [JSON format](https://docs.ntfy.sh/publish/#publish-as-json)
+> directly, using a webhook contact point's
+> [custom payload](https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/webhook-notifier/#custom-payload).
+> This bridge still works, but new setups should use one of those.
+
 This service is a utility webhook server for the grafana alert webhooks as well as prometheus alertmanager, which sends a notification to your ntfy url ([ntfy.sh](https://ntfy.sh/)), and consequently to your phone/desktop.
 
 **New:**
